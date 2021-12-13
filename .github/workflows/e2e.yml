@@ -1,79 +1,27 @@
 name: Test
 on:
   pull_request:
-  push: { branches: main }
+  push:
+    branches:
+     - main
 
 jobs:
-  test:
-    name: Run test suite
+  e2e:
+    name: Run e2e tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Run shellcheck tests
-        run: shellcheck rush setup
-      - name: Build container for approval tests
-        run: docker-compose build
-      - name: Run approval tests
-        run: docker-compose run ci
-
-  ubuntu_setup:
-    name: Setup on Ubuntu
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Run setup
-        run: ./setup
-      - name: Test setup artifacts
-        run: test/setup_artifacts
-
-jobs:
-  test:
-    name: Run test suite
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run shellcheck tests
-        run: shellcheck alf
-
-      - name: Build container for approval tests
-        run: docker-compose build
-
-      - name: Run approval tests
-        run: docker-compose run ci
-
-      - name: Run sanity test in zsh
-        run: docker-compose run test_zsh
-
-
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.16.4
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Fetch required Go modules
-        run: go mod download
-
-      - name: Build
-        run: go build -v ./...
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v2
-        with:
-          push: false
-          tags: ${{ github.event.repository.name }}:latest, ${{ github.repository }}:latest
-
-      - name: Run functional tests
-        run: go test -v ./...
+      - name: Build and run containers
+        run: docker-compose up -d
+      - name: Fake successful scenario
+        run:  |
+          curl --request POST --url http://localhost:8081/authenticate --header 'content-type: application/json' --data '{"username": "username", "password": "password"}'
+          curl --request GET --url http://localhost:8083/list --header 'content-type: application/json'
+          curl --request POST --url http://localhost:8083/order --header 'content-type: application/json' --header 'Authorization: TOKEN: SECRET AUTH TOKEN' --data '{"id": 1 }'
+          echo "PASS OK"
+      - name: Fake erroneous scenario
+        run:  |
+          curl --request GET --url http://localhost:8083/list --header 'content-type: application/json'
+          curl --request POST --url http://localhost:8083/order --header 'content-type: application/json' --header 'Authorization: FAKE_TOKEN' --data '{"id": 1'}
+          echo "FAIL OK"
