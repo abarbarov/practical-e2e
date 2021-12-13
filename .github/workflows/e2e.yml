@@ -1,0 +1,27 @@
+name: Test
+on:
+  pull_request:
+  push:
+    branches:
+     - main
+
+jobs:
+  e2e:
+    name: Run e2e tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build and run containers
+        run: docker-compose up -d
+      - name: Fake successful scenario
+        run:  |
+          curl --request POST --url http://localhost:8081/authenticate --header 'content-type: application/json' --data '{"username": "username", "password": "password"}'
+          curl --request GET --url http://localhost:8083/list --header 'content-type: application/json'
+          curl --request POST --url http://localhost:8083/order --header 'content-type: application/json' --header 'Authorization: TOKEN: SECRET AUTH TOKEN' --data '{"id": 1 }'
+          echo "PASS OK"
+      - name: Fake erroneous scenario
+        run:  |
+          curl --request GET --url http://localhost:8083/list --header 'content-type: application/json'
+          curl --request POST --url http://localhost:8083/order --header 'content-type: application/json' --header 'Authorization: FAKE_TOKEN' --data '{"id": 1'}
+          echo "FAIL OK"
