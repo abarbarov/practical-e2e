@@ -18,7 +18,7 @@ func pay(w http.ResponseWriter, r *http.Request) {
 		"token": r.Header.Get("Authorization"),
 	})
 
-	authRes, _ := http.Post("http://localhost:8081/validate", "application/json", bytes.NewBuffer(authReq))
+	authRes, _ := http.Post("http://auth:8081/validate", "application/json", bytes.NewBuffer(authReq))
 	defer authRes.Body.Close()
 
 	if authRes.StatusCode == http.StatusUnauthorized {

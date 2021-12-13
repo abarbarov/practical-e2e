@@ -37,7 +37,7 @@ func order(w http.ResponseWriter, r *http.Request) {
 		"token": token,
 	})
 
-	authRes, _ := http.Post("http://localhost:8081/validate", "application/json", bytes.NewBuffer(authReq))
+	authRes, _ := http.Post("http://auth:8081/validate", "application/json", bytes.NewBuffer(authReq))
 	defer authRes.Body.Close()
 
 	if authRes.StatusCode == http.StatusUnauthorized {
@@ -79,7 +79,7 @@ func order(w http.ResponseWriter, r *http.Request) {
 
 func pay(product Product, token string) bool {
 	payReq, _ := json.Marshal(product)
-	req, _ := http.NewRequest("POST", "http://localhost:8082/pay", bytes.NewBuffer(payReq))
+	req, _ := http.NewRequest("POST", "http://payment:8082/pay", bytes.NewBuffer(payReq))
 	req.Header.Set("Authorization", token)
 	req.Header.Set("Content-Type", "application/json")
 

@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  auth:
+    image: auth
+    build:
+      context: auth
+    restart: always
+    ports:
+      - "8081:8081"
+    networks:
+      - e2e
+  payment:
+    image: payment
+    build:
+      context: payment
+    restart: always
+    ports:
+      - "8082:8082"
+    networks:
+      - e2e
+  product:
+    image: product
+    build:
+      context: product
+    restart: always
+    ports:
+      - "8083:8083"
+    networks:
+      - e2e
+
+networks:
+  e2e:
+    driver: bridge
